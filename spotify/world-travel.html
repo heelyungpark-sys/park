@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Explorer - Travel Planner</title>
+  <style>
+    :root {
+      /* Spotify Design Tokens */
+      --bg-base: #121212;
+      --bg-surface: #181818;
+      --bg-highlight: #1f1f1f;
+      --bg-card: #181818;
+      --bg-card-hover: #252525;
+      
+      --text-base: #ffffff;
+      --text-subdued: #b3b3b3;
+      --text-bright: #fdfdfd;
+      
+      --brand-primary: #1ed760;
+      --brand-primary-hover: #1db954;
+      
+      --border-light: #7c7c7c;
+      --separator: #2a2a2a;
+      
+      --font-family: "CircularSp", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+      
+      /* Elevations */
+      --shadow-heavy: rgba(0,0,0,0.5) 0px 8px 24px;
+      --shadow-medium: rgba(0,0,0,0.3) 0px 8px 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      font-family: var(--font-family);
+      color: var(--text-base);
+      background-color: var(--bg-base);
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      grid-template-rows: 1fr 90px;
+      height: 100vh;
+      width: 100vw;
+    }
+
+    /* SCROLLBAR */
+    ::-webkit-scrollbar { width: 12px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background-color: rgba(255, 255, 255, 0.3);
+      border: 3px solid var(--bg-base);
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover { background-color: rgba(255, 255, 255, 0.5); }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3, h4 { font-weight: 700; }
+    .text-subdued { color: var(--text-subdued); }
+    .text-bold { font-weight: 700; }
+    
+    /* SIDEBAR */
+    .sidebar {
+      background-color: #000000;
+      padding: 24px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+      grid-column: 1;
+      grid-row: 1;
+      z-index: 10;
+    }
+    .logo {
+      padding: 0 12px;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -1px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo svg { fill: var(--text-base); width: 28px; height: 28px; }
+    .nav-links { display: flex; flex-direction: column; gap: 8px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 16px; padding: 8px 12px;
+      color: var(--text-subdued); text-decoration: none; font-size: 14px;
+      font-weight: 700; border-radius: 4px; transition: color 0.2s; cursor: pointer;
+    }
+    .nav-item:hover, .nav-item.active { color: var(--text-base); }
+    .nav-item svg { width: 24px; height: 24px; fill: currentColor; }
+    .library-section { margin-top: 16px; flex-grow: 1; overflow-y: auto; }
+    .divider { height: 1px; background-color: var(--separator); margin: 8px 12px; }
+    .playlist-item {
+      padding: 8px 12px; font-size: 14px; color: var(--text-subdued); cursor: pointer;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .playlist-item:hover { color: var(--text-base); }
+
+    /* MAIN CONTENT */
+    .main-view {
+      background-color: var(--bg-base);
+      grid-column: 2; grid-row: 1; overflow-y: auto; position: relative;
+    }
+    .top-gradient {
+      background: linear-gradient(to bottom, rgba(83, 157, 245, 0.4) 0%, var(--bg-base) 100%);
+      height: 332px; position: absolute; top: 0; left: 0; right: 0;
+      z-index: 0; pointer-events: none; transition: background 0.3s;
+    }
+    .content-container {
+      position: relative; z-index: 1; padding: 24px 32px; padding-top: 80px;
+    }
+    .top-bar {
+      position: sticky; top: 0; height: 64px; display: flex; align-items: center;
+      padding: 0 32px; z-index: 100; background-color: transparent; transition: background-color 0.3s;
+    }
+    .top-bar.scrolled { background-color: var(--bg-surface); box-shadow: var(--shadow-heavy); }
+
+    .nav-btn {
+      background: rgba(0,0,0,0.7); border-radius: 50%; padding: 8px; border: none;
+      color: var(--text-base); cursor: pointer; margin-right: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .nav-btn:hover { background: rgba(0,0,0,0.9); transform: scale(1.05); }
+    .nav-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* CARDS (ALBUM STYLE) */
+    .section-title { font-size: 24px; margin-bottom: 24px; margin-top: 32px; }
+    .section-title:first-child { margin-top: 0; }
+    
+    .card-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 24px;
+    }
+    .card {
+      background-color: var(--bg-card); padding: 16px; border-radius: 8px;
+      cursor: pointer; transition: background-color 0.3s, box-shadow 0.3s; position: relative;
+    }
+    .card:hover { background-color: var(--bg-card-hover); box-shadow: var(--shadow-medium); }
+    .card-image-wrapper {
+      width: 100%; aspect-ratio: 1/1; border-radius: 6px; overflow: hidden;
+      margin-bottom: 16px; box-shadow: var(--shadow-heavy); position: relative;
+    }
+    .card-image { width: 100%; height: 100%; object-fit: cover; }
+    .card-title {
+      font-size: 16px; font-weight: 700; margin-bottom: 8px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .card-subtitle {
+      font-size: 14px; color: var(--text-subdued); display: -webkit-box;
+      -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+    }
+
+    /* BUTTONS */
+    .btn-play {
+      position: absolute; bottom: 8px; right: 8px; width: 48px; height: 48px;
+      border-radius: 50%; background-color: var(--brand-primary); color: #000;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: var(--shadow-heavy); opacity: 0; transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s, background-color 0.2s, transform 0.1s; border: none; cursor: pointer; z-index: 2;
+    }
+    .card:hover .btn-play { opacity: 1; transform: translateY(0); }
+    .btn-play:hover { background-color: var(--brand-primary-hover); transform: translateY(0) scale(1.05); }
+    .btn-play:active { transform: scale(0.95); }
+    .btn-play svg { width: 24px; height: 24px; fill: currentColor; }
+
+    .btn-pill {
+      background-color: var(--text-base); color: #000; border-radius: 9999px;
+      padding: 8px 32px; font-size: 14px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1.4px; border: none; cursor: pointer; transition: transform 0.1s;
+    }
+    .btn-pill:hover { transform: scale(1.04); }
+    
+    /* TRACKLIST (CITIES) */
+    .track-list { width: 100%; border-collapse: collapse; margin-top: 24px; }
+    .track-list th {
+      text-align: left; color: var(--text-subdued); font-size: 12px;
+      text-transform: uppercase; letter-spacing: 1px; padding: 8px 16px;
+      border-bottom: 1px solid var(--separator); font-weight: 400;
+    }
+    .track-row { border-radius: 4px; transition: background-color 0.2s; cursor: pointer; }
+    .track-row:hover { background-color: rgba(255, 255, 255, 0.1); }
+    .track-row td { padding: 12px 16px; font-size: 14px; vertical-align: middle; }
+    .track-row .track-title-col { display: flex; align-items: center; gap: 16px; }
+    .track-row .track-img { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; }
+    .track-row .track-name { font-weight: 400; color: var(--text-base); font-size: 16px; }
+    .track-row .track-desc { font-size: 14px; color: var(--text-subdued); margin-top: 4px;}
+    
+    .btn-add {
+      background: transparent; border: 1px solid var(--text-subdued); color: var(--text-base);
+      border-radius: 9999px; padding: 6px 16px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.2s;
+    }
+    .btn-add:hover { border-color: var(--text-base); transform: scale(1.05); }
+
+    /* EXPANDED ITINERARY VIEW */
+    .itinerary-row { display: none; }
+    .itinerary-row.open { display: table-row; }
+    .itinerary-content {
+      background-color: var(--bg-highlight); padding: 24px; border-radius: 8px; margin: 8px 16px 24px 16px;
+      box-shadow: inset 0 4px 6px rgba(0,0,0,0.3);
+    }
+    .it-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: var(--brand-primary); }
+    .it-days { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+    .it-day { display: flex; gap: 16px; background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px;}
+    .it-day-label { font-weight: 700; color: var(--text-base); width: 60px; flex-shrink: 0; }
+    .it-day-desc { color: var(--text-subdued); font-size: 14px; line-height: 1.5; }
+    
+    .it-hotel { border-top: 1px solid var(--separator); padding-top: 16px; }
+    .it-hotel-title { font-size: 14px; font-weight: 700; color: var(--text-base); margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+    .it-hotel-desc { color: var(--text-subdued); font-size: 14px; line-height: 1.5; }
+
+    /* NOW PLAYING BAR (BOTTOM) */
+    .bottom-bar {
+      grid-column: 1 / span 2; grid-row: 2; background-color: var(--bg-surface);
+      border-top: 1px solid var(--separator); display: flex; align-items: center;
+      justify-content: space-between; padding: 0 16px; z-index: 100;
+    }
+    .now-playing { display: flex; align-items: center; gap: 16px; width: 30%; }
+    .np-img { width: 56px; height: 56px; border-radius: 4px; object-fit: cover; background-color: #333; }
+    .np-info { display: flex; flex-direction: column; gap: 4px; }
+    .np-title { font-size: 14px; font-weight: 400; color: var(--text-base); }
+    .np-artist { font-size: 12px; color: var(--text-subdued); }
+    
+    .player-controls { display: flex; flex-direction: column; align-items: center; width: 40%; gap: 8px; }
+    .control-buttons { display: flex; align-items: center; gap: 24px; }
+    .ctrl-btn { background: transparent; border: none; color: var(--text-subdued); cursor: pointer; }
+    .ctrl-btn:hover { color: var(--text-base); }
+    .ctrl-btn svg { width: 16px; height: 16px; fill: currentColor; }
+    .ctrl-play {
+      background-color: var(--text-base); color: #000; width: 32px; height: 32px;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .ctrl-play:hover { transform: scale(1.05); }
+    .ctrl-play svg { width: 16px; height: 16px; fill: #000; }
+    
+    .progress-bar { width: 100%; max-width: 600px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-subdued); }
+    .progress-track { flex-grow: 1; height: 4px; background-color: rgba(255,255,255,0.3); border-radius: 2px; overflow: hidden; cursor: pointer; }
+    .progress-fill { height: 100%; width: 30%; background-color: var(--text-base); border-radius: 2px; }
+    .progress-track:hover .progress-fill { background-color: var(--brand-primary); }
+
+    .extra-controls { width: 30%; display: flex; justify-content: flex-end; align-items: center; gap: 16px; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 2a15 15 0 0 0 4.5 10A15 15 0 0 0 12 22a15 15 0 0 0-4.5-10A15 15 0 0 0 12 2z"/><path d="M2 12h20"/></svg>
+      WorldExplorer
+    </div>
+    <div class="nav-links">
+      <div class="nav-item active" onclick="goHome()">
+        <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+        홈 (세계지도)
+      </div>
+      <div class="nav-item">
+        <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+        나라 검색
+      </div>
+    </div>
+    
+    <div class="nav-links">
+      <div class="nav-item" style="opacity: 0.8;">
+        <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+        내 여행 계획 만들기
+      </div>
+      <div class="nav-item" style="opacity: 0.8;">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        저장된 목적지
+      </div>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <div class="library-section" id="myTripsList">
+      <!-- Auto populated travel list -->
+    </div>
+  </div>
+
+  <!-- MAIN VIEW -->
+  <div class="main-view" id="mainView">
+    <div class="top-gradient" id="topGradient"></div>
+    <div class="top-bar" id="topBar">
+      <button class="nav-btn" id="btnBack" onclick="goBack()" disabled>
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;"><path d="M15.41 16.59L10.83 12l4.58-4.59L14 6l-6 6 6 6 1.41-1.41z"/></svg>
+      </button>
+      <button class="nav-btn" disabled>
+        <svg viewBox="0 0 24 24" style="width:24px;height:24px;"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+      </button>
+    </div>
+
+    <div class="content-container">
+      
+      <!-- LEVEL 1: CONTINENTS (HOME) -->
+      <div id="viewLevel1">
+        <h1 class="section-title" style="font-size: 32px; letter-spacing: -1px;">안녕! 오늘 탐험할 대륙은?</h1>
+        <div class="card-grid" id="continentsGrid"></div>
+      </div>
+
+      <!-- LEVEL 2: COUNTRIES -->
+      <div id="viewLevel2" style="display: none;">
+        <div style="display: flex; gap: 32px; align-items: flex-end; margin-bottom: 32px;">
+          <img id="l2HeroImg" src="" style="width: 232px; height: 232px; object-fit: cover; box-shadow: var(--shadow-heavy);">
+          <div>
+            <div style="font-size: 14px; font-weight: 700; text-transform: uppercase;">대륙 플레이리스트</div>
+            <h1 id="l2HeroTitle" style="font-size: 96px; font-weight: 900; letter-spacing: -0.04em; margin: 8px 0; line-height: 1;"></h1>
+            <p id="l2HeroDesc" class="text-subdued" style="font-size: 14px; margin-top: 16px;"></p>
+          </div>
+        </div>
+        <h2 class="section-title">주요 나라</h2>
+        <div class="card-grid" id="countriesGrid"></div>
+      </div>
+
+      <!-- LEVEL 3: CITIES (TRACKLIST) -->
+      <div id="viewLevel3" style="display: none;">
+        <div style="display: flex; gap: 32px; align-items: flex-end; margin-bottom: 32px;">
+          <img id="l3HeroImg" src="" style="width: 232px; height: 232px; object-fit: cover; box-shadow: var(--shadow-heavy); border-radius: 50%;">
+          <div>
+            <div style="font-size: 14px; font-weight: 700; text-transform: uppercase;">나라 (국가)</div>
+            <h1 id="l3HeroTitle" style="font-size: 96px; font-weight: 900; letter-spacing: -0.04em; margin: 8px 0; line-height: 1;"></h1>
+            <p id="l3HeroDesc" class="text-subdued" style="font-size: 14px; margin-top: 16px;"></p>
+          </div>
+        </div>
+        
+        <div style="padding: 24px 0; display: flex; gap: 32px; align-items: center;">
+          <button class="btn-play" style="position: static; opacity: 1; transform: none; width: 56px; height: 56px;">
+            <svg viewBox="0 0 24 24" style="width: 28px; height: 28px;"><path d="M8 5v14l11-7z"/></svg>
+          </button>
+          <button class="btn-pill btn-pill-dark">팔로우</button>
+        </div>
+        
+        <table class="track-list" id="cityTable">
+          <thead>
+            <tr>
+              <th style="width: 50px; text-align: center;">#</th>
+              <th>도시명 (트랙)</th>
+              <th style="text-align: right;">나만의 여행지 담기</th>
+            </tr>
+          </thead>
+          <tbody id="cityTableBody">
+            <!-- Populated by JS -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- BOTTOM BAR (NOW PLAYING) -->
+  <div class="bottom-bar">
+    <div class="now-playing">
+      <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?w=200" class="np-img" id="npImg" alt="Now Playing">
+      <div class="np-info">
+        <div class="np-title" id="npTitle">지구본 돌리기</div>
+        <div class="np-artist" id="npDesc">여행을 준비하세요</div>
+      </div>
+      <button class="ctrl-btn" style="margin-left: 16px;">
+        <svg viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+      </button>
+    </div>
+    
+    <div class="player-controls">
+      <div class="control-buttons">
+        <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+        <button class="ctrl-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+        <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+      </div>
+      <div class="progress-bar">
+        <span>0:00</span>
+        <div class="progress-track"><div class="progress-fill"></div></div>
+        <span>비행중...</span>
+      </div>
+    </div>
+    
+    <div class="extra-controls">
+      <button class="ctrl-btn"><svg viewBox="0 0 24 24"><path d="M11 5h2v14h-2zM6 9h2v10H6zm10 4h2v6h-2z"/></svg></button>
+      <div class="progress-track" style="width: 80px;"><div class="progress-fill" style="width: 50%;"></div></div>
+    </div>
+  </div>
+
+  <script>
+    // Data Structure
+    const continents = [
+      { id: 'asia', name: '아시아', desc: '가장 크고 인구가 많은 대륙', img: 'https://images.unsplash.com/photo-1464817739973-0128fe77aaa1?w=500', color: 'rgba(235, 100, 52, 0.4)' },
+      { id: 'europe', name: '유럽', desc: '역사와 문화가 숨쉬는 대륙', img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=500', color: 'rgba(52, 110, 235, 0.4)' },
+      { id: 'americas', name: '아메리카', desc: '자유와 자연이 공존하는 곳', img: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=500', color: 'rgba(52, 235, 122, 0.4)' }
+    ];
+
+    const countries = {
+      'asia': [
+        { id: 'japan', name: '일본', desc: '애니메이션과 스시의 나라', img: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=500' },
+        { id: 'korea', name: '대한민국', desc: 'K-pop과 아름다운 사계절', img: 'https://images.unsplash.com/photo-1517154421773-0529f29ea451?w=500' }
+      ],
+      'europe': [
+        { id: 'france', name: '프랑스', desc: '낭만과 예술의 중심지', img: 'https://images.unsplash.com/photo-1502602898657-3e907a5ea82c?w=500' },
+        { id: 'italy', name: '이탈리아', desc: '고대 로마 유적과 피자', img: 'https://images.unsplash.com/photo-1515542622106-78b28af7815d?w=500' },
+        { id: 'uk', name: '영국', desc: '신사와 해리포터의 고향', img: 'https://images.unsplash.com/photo-1513635269975-5969336ac1cb?w=500' }
+      ],
+      'americas': [
+        { id: 'usa', name: '미국', desc: '꿈을 이루는 광활한 나라', img: 'https://images.unsplash.com/photo-1485738422979-f5c462d49f74?w=500' }
+      ]
+    };
+
+    const cities = {
+      'japan': [
+        { 
+          id: 'tokyo', name: '도쿄', img: 'https://images.unsplash.com/photo-1503899036067-e13e8ebff511?w=200', desc: '도쿄타워와 번화가의 만남',
+          itinerary2n3d: [
+            { day: '1일차', desc: '오전: 아사쿠사 센소지 구경 / 오후: 도쿄 스카이트리에서 야경 감상' },
+            { day: '2일차', desc: '하루 종일 도쿄 디즈니랜드에서 환상적인 퍼레이드와 놀이기구 탑승' },
+            { day: '3일차', desc: '오다이바 해변공원 산책 및 건담 조각상 구경 후 귀국' }
+          ],
+          itinerary1w: [
+            { day: '1~3일차', desc: '도쿄 디즈니랜드 & 디즈니씨 완전 정복' },
+            { day: '4~5일차', desc: '신주쿠, 시부야 시내 투어 및 팀랩 플래닛 전시 관람' },
+            { day: '6~7일차', desc: '근교 요코하마 항구 투어 및 호빵맨 박물관 방문' }
+          ],
+          hotel: { name: '도쿄 디즈니 앰배서더 호텔', desc: '아이들이 좋아하는 디즈니 캐릭터 테마의 패밀리룸 완비 (4인 가족 최적화)' }
+        },
+        { 
+          id: 'osaka', name: '오사카', img: 'https://images.unsplash.com/photo-1590559899731-a382839cecdf?w=200', desc: '맛있는 음식과 유니버셜 스튜디오',
+          itinerary2n3d: [
+            { day: '1일차', desc: '오사카성 역사 탐방 및 도톤보리에서 타코야키 맛집 투어' },
+            { day: '2일차', desc: '유니버설 스튜디오 재팬 (USJ) 슈퍼 닌텐도 월드 완벽 정복' },
+            { day: '3일차', desc: '가이유칸 수족관에서 대형 고래상어 만나기 후 귀국' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '오사카 시내 맛집 투어 및 우메다 공중정원 야경' },
+            { day: '3~4일차', desc: '고베 롯코산 목장 동물 체험 및 호빵맨 뮤지엄' },
+            { day: '5~6일차', desc: '교토 철도 박물관 및 아라시야마 대나무 숲 산책' },
+            { day: '7일차', desc: '유니버설 스튜디오 재팬 (USJ) 스페셜 투어' }
+          ],
+          hotel: { name: '더 파크 프론트 호텔 앳 유니버설 스튜디오', desc: 'USJ 정문 바로 앞 위치, 넓은 4인용 커넥팅룸과 키즈 어메니티 제공' }
+        }
+      ],
+      'korea': [
+        {
+          id: 'seoul', name: '서울', img: 'https://images.unsplash.com/photo-1616050519395-5dbceeb11f77?w=200', desc: '과거와 미래가 공존하는 대한민국의 심장',
+          itinerary2n3d: [
+            { day: '1일차', desc: '경복궁 한복 체험 후 광화문 광장, 청계천 산책' },
+            { day: '2일차', desc: '롯데월드 어드벤처 & 아쿠아리움 종일 투어' },
+            { day: '3일차', desc: '국립중앙박물관 어린이박물관 견학 후 남산 서울타워 야경 감상' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '종로 및 중구 핵심 탐방 (고궁, 남산, 남대문 시장)' },
+            { day: '3~4일차', desc: '잠실 롯데월드몰 일대 및 한강 공원 자전거 피크닉' },
+            { day: '5~6일차', desc: '과천 서울대공원 동물원 및 국립과천과학관 체험' },
+            { day: '7일차', desc: '코엑스 별마당 도서관 및 아쿠아리움 관람 후 마무리' }
+          ],
+          hotel: { name: '시그니엘 서울', desc: '초고층 뷰와 함께하는 럭셔리 스테이, 가족 고객을 위한 세심한 서비스' }
+        },
+        {
+          id: 'busan', name: '부산', img: 'https://images.unsplash.com/photo-1582234372722-50d7ccc30ebd?w=200', desc: '탁 트인 바다와 맛있는 해산물의 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '해운대 해수욕장 모래놀이 및 씨라이프 아쿠아리움' },
+            { day: '2일차', desc: '송도 해상케이블카 탑승 후 국제시장 깡통야시장 먹거리 투어' },
+            { day: '3일차', desc: '기장 해동용궁사 산책 및 스카이라인 루지 체험' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '해운대 일대 해변 및 동백섬 산책, 요트 투어' },
+            { day: '3~4일차', desc: '기장 롯데월드 어드벤처 부산 및 국립부산과학관' },
+            { day: '5~6일차', desc: '광안리 해변 드론쇼 관람 및 센텀시티 스파랜드' },
+            { day: '7일차', desc: '영도 국립해양박물관 및 태종대 다누비열차 탑승' }
+          ],
+          hotel: { name: '파라다이스 호텔 부산', desc: '야외 온천 씨메르 및 어린이 놀이시설(BMW 키즈 드라이빙 등) 완비' }
+        },
+        {
+          id: 'daegu', name: '대구', img: 'https://images.unsplash.com/photo-1588661646270-eb3782bcfce4?w=200', desc: '뜨거운 열정과 풍부한 먹거리의 낭만 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '이월드 (E-WORLD) 및 83타워 전망대 관람' },
+            { day: '2일차', desc: '네이처파크 교감형 동물원 및 수성못 오리배 체험' },
+            { day: '3일차', desc: '대구 아쿠아리움 (신세계백화점) 관람 후 귀가' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '이월드 및 수성못 일대 여유로운 피크닉' },
+            { day: '3~4일차', desc: '팔공산 케이블카 탑승 및 동화사 산책, 갓바위 하이킹' },
+            { day: '5~6일차', desc: '네이처파크 동물 체험 및 스파밸리 워터파크 물놀이' },
+            { day: '7일차', desc: '근대문화골목 투어 및 서문시장 야시장 먹거리 투어' }
+          ],
+          hotel: { name: '호텔 수성', desc: '수성못이 한눈에 보이는 루프탑 인피니티 풀과 쾌적한 패밀리룸' }
+        },
+        {
+          id: 'gwangju', name: '광주', img: 'https://images.unsplash.com/photo-1627993073740-d9ab5cda930f?w=200', desc: '맛과 예술의 고장',
+          itinerary2n3d: [
+            { day: '1일차', desc: '국립아시아문화전당(ACC) 어린이문화원 대규모 체험' },
+            { day: '2일차', desc: '광주 패밀리랜드 놀이기구 탑승 및 우치공원 동물원 견학' },
+            { day: '3일차', desc: '광주과학관 아이누리관 체험 후 송정역 시장 먹거리 투어' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '국립아시아문화전당 어린이문화원 및 동명동 카페거리' },
+            { day: '3~4일차', desc: '양림동 역사문화마을 및 펭귄마을 스탬프 투어' },
+            { day: '5~6일차', desc: '광주 패밀리랜드 카라반 캠핑 및 무등산 지질공원 나들이' },
+            { day: '7일차', desc: '광주 어린이대공원 및 시립미술관 전시 관람' }
+          ],
+          hotel: { name: '홀리데이 인 광주', desc: '상무지구에 위치하여 이동이 편리하고 실내 수영장을 갖춘 안락한 호텔' }
+        },
+        {
+          id: 'daejeon', name: '대전', img: 'https://images.unsplash.com/photo-1590518335391-76472498dbca?w=200', desc: '과학과 재미가 만나는 노잼 아닌 꿀잼 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '국립중앙과학관 종일 체험 및 성심당 본점 빵 투어' },
+            { day: '2일차', desc: '대전 오월드 (동물원 + 플라워랜드 + 버드랜드)' },
+            { day: '3일차', desc: '엑스포 과학공원 한빛탑 전망대 및 신세계 아트앤사이언스 아쿠아리움' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '국립중앙과학관, 시민천문대 등 과학 테마 집중 투어' },
+            { day: '3~4일차', desc: '오월드 사파리 체험 및 뿌리공원 가족 산책' },
+            { day: '5~6일차', desc: '계룡산 국립공원 자연 탐방 및 수통골 계곡 물놀이' },
+            { day: '7일차', desc: '엑스포 과학공원, 한밭수목원 피크닉 및 성심당 빵쇼핑' }
+          ],
+          hotel: { name: '호텔 오노마 대전 (오토그래프 컬렉션)', desc: '신세계 백화점 및 아쿠아리움과 연결되어 아이들과 이동이 매우 편리한 숙소' }
+        },
+        {
+          id: 'ulsan', name: '울산', img: 'https://images.unsplash.com/photo-1549429765-b1a13e5c9b6b?w=200', desc: '자연과 산업이 어우러진 해양 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '장생포 고래박물관, 고래생태체험관 및 고래문화마을' },
+            { day: '2일차', desc: '대왕암공원 출렁다리 체험 및 일산해수욕장 모래놀이' },
+            { day: '3일차', desc: '태화강 국가정원 은하수길 산책 및 십리대숲 탐방' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '장생포 고래문화특구 완전 정복 (박물관, 생태체험관, 모노레일)' },
+            { day: '3~4일차', desc: '태화강 국가정원 피크닉 및 울산대공원 동물원, 생태여행관' },
+            { day: '5~6일차', desc: '간절곶 해돋이 감상 및 옹기마을 옹기 만들기 체험' },
+            { day: '7일차', desc: '대왕암공원 출렁다리 및 자수정 동굴나라 보트 탐험' }
+          ],
+          hotel: { name: '라한셀렉트 경주 (울산 인접)', desc: '울산과 가까운 보문단지에 위치, 키즈라운지(원더랜드)와 야외 수영장 완비' }
+        },
+        {
+          id: 'incheon', name: '인천', img: 'https://images.unsplash.com/photo-1596422846543-75c6fc197f0a?w=200', desc: '바다를 품은 글로벌 물류 중심지',
+          itinerary2n3d: [
+            { day: '1일차', desc: '송도 센트럴파크 수상택시 탑승 및 국립세계문자박물관 견학' },
+            { day: '2일차', desc: '월미도 테마파크 놀이기구 및 차이나타운 짜장면 먹방' },
+            { day: '3일차', desc: '영종도 인스파이어 엔터테인먼트 리조트 오로라 미디어 아트 관람' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '송도국제도시 센트럴파크 및 현대프리미엄아울렛 쇼핑' },
+            { day: '3~4일차', desc: '월미도, 개항장 거리 및 차이나타운 역사문화 투어' },
+            { day: '5~6일차', desc: '영종도 씨사이드파크 레일바이크 및 을왕리 갯벌 체험' },
+            { day: '7일차', desc: '강화도 고인돌 유적지 및 루지 체험 시설 탑승' }
+          ],
+          hotel: { name: '인스파이어 엔터테인먼트 리조트', desc: '거대한 미디어 아트, 워터파크(스플래시 베이)를 갖춘 복합 리조트로 가족 단위 최고 인기' }
+        },
+        {
+          id: 'sejong', name: '세종', img: 'https://images.unsplash.com/photo-1629806497479-7c18258dc7b0?w=200', desc: '자연과 조화를 이루는 스마트 행정 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '국립세종수목원 사계절 온실 및 어린이 정원 탐방' },
+            { day: '2일차', desc: '세종 호수공원 자전거 피크닉 및 대통령기록관 견학' },
+            { day: '3일차', desc: '우주측지관측센터 별자리 체험 및 금강보행교(이응다리) 산책' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '국립세종수목원 및 세종 호수공원 일대 자연 생태 탐험' },
+            { day: '3~4일차', desc: '어린이 박물관 및 정부세종청사 옥상정원 투어' },
+            { day: '5~6일차', desc: '베어트리파크 곰 먹이주기 체험 및 교과서박물관 견학' },
+            { day: '7일차', desc: '금강자연휴양림 캠핑 및 이응다리 야경 감상' }
+          ],
+          hotel: { name: '코트야드 바이 메리어트 세종', desc: '호수공원과 인접해 도보 산책이 가능하며, 쾌적하고 깔끔한 4인 가족 룸 제공' }
+        },
+        {
+          id: 'jeonju', name: '전주', img: 'https://images.unsplash.com/photo-1596796245362-e64e9e03d402?w=200', desc: '전통의 향기가 가득한 한옥과 미식의 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '한옥마을 한복 대여 후 전동성당 및 경기전 인생샷 촬영' },
+            { day: '2일차', desc: '전주 동물원 및 드림랜드 놀이공원 방문' },
+            { day: '3일차', desc: '전통문화전당 한지 공예 체험 및 초코파이 만들기 체험' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '전주 한옥마을 및 자만벽화마을 느린 골목 산책' },
+            { day: '3~4일차', desc: '전주 동물원, 드림랜드 및 덕진공원 오리배 체험' },
+            { day: '5~6일차', desc: '한국소리문화의전당 공연 관람 및 막걸리 골목 맛집 투어(어른용)' },
+            { day: '7일차', desc: '국립전주박물관 어린이박물관 및 완주 아쿠아틱파크 아마존 물놀이' }
+          ],
+          hotel: { name: '라한호텔 전주', desc: '한옥마을 뷰를 감상할 수 있으며, 온돌룸과 넓은 트윈룸이 있어 가족 여행에 적합' }
+        },
+        {
+          id: 'gumi', name: '구미', img: 'https://images.unsplash.com/photo-1577317379762-b9d9c636f183?w=200', desc: '금오산의 절경을 품은 첨단 산업 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '금오산 케이블카 탑승 및 대혜폭포 산책' },
+            { day: '2일차', desc: '구미 에코랜드 모노레일 탑승 및 숲속 짚라인 체험' },
+            { day: '3일차', desc: '낙동강 체육공원 핑크뮬리 (가을) 및 구미과학관 체험' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '금오산 도립공원 케이블카 및 금오지 둘레길 오리배' },
+            { day: '3~4일차', desc: '구미 에코랜드 숲체험 및 산동참생태숲 피크닉' },
+            { day: '5~6일차', desc: '새마을운동테마공원 어린이 체험 및 박정희대통령 생가 역사 투어' },
+            { day: '7일차', desc: '낙동강 체육공원 자전거 라이딩 및 동락공원 반려견 구경' }
+          ],
+          hotel: { name: '호텔 금오산', desc: '금오산 자락에 위치해 자연 속 힐링이 가능하며 온돌 객실을 보유해 어린 자녀와 머물기 좋음' }
+        }
+      ],
+      'france': [
+        {
+          id: 'paris', name: '파리', img: 'https://images.unsplash.com/photo-1499856871958-5b9627545d1a?w=200', desc: '에펠탑이 반짝이는 예술의 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '루브르 박물관 모나리자 관람 후 에펠탑 앞 잔디밭 피크닉' },
+            { day: '2일차', desc: '세느강 바토무슈 유람선 탑승 및 몽마르뜨 언덕 예술가 거리 걷기' },
+            { day: '3일차', desc: '디즈니랜드 파리 방문 후 귀국' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '에펠탑 주변 및 샹젤리제 거리 완전 정복' },
+            { day: '3~4일차', desc: '파리 디즈니랜드 리조트 2박 3일 체류' },
+            { day: '5~6일차', desc: '베르사유 궁전 정원 마차 체험 및 몽마르뜨 언덕' },
+            { day: '7일차', desc: '몽쥬약국 쇼핑 및 마레지구 크레페 맛집 투어' }
+          ],
+          hotel: { name: '노보텔 파리 투르 에펠', desc: '에펠탑 뷰가 돋보이는 널찍한 패밀리 스위트룸, 16세 이하 자녀 조식 무료' }
+        }
+      ],
+      'usa': [
+        {
+          id: 'newyork', name: '뉴욕', img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=200', desc: '잠들지 않는 화려한 도시',
+          itinerary2n3d: [
+            { day: '1일차', desc: '타임스퀘어 야경 투어 및 브로드웨이 가족 뮤지컬(라이온킹) 관람' },
+            { day: '2일차', desc: '자유의 여신상 유람선 탑승 및 미국 자연사 박물관(공룡 화석) 견학' },
+            { day: '3일차', desc: '센트럴파크 자전거 타기 및 첼시마켓 미식 탐방 후 귀국' }
+          ],
+          itinerary1w: [
+            { day: '1~2일차', desc: '타임스퀘어 및 엠파이어 스테이트 빌딩 야경 감상' },
+            { day: '3~4일차', desc: '센트럴파크 동물원 및 인트레피드 해양항공우주 박물관' },
+            { day: '5~6일차', desc: '자유의 여신상, 브루클린 브릿지 도보 횡단 및 덤보' },
+            { day: '7일차', desc: '소호 쇼핑 및 탑 오브 더 락 야경 관람' }
+          ],
+          hotel: { name: '밀레니엄 힐튼 뉴욕 다운타운', desc: '원월드 트레이드 센터 인근, 실내 수영장 완비 및 안전하고 조용한 패밀리 객실' }
+        }
+      ]
+    };
+
+    // Navigation State
+    const navHistory = ['home']; 
+    let currentContinent = null;
+    let currentCountry = null;
+
+    const myTravelList = [];
+
+    function init() {
+      // Render Home Continents
+      const grid = document.getElementById('continentsGrid');
+      continents.forEach(cont => {
+        grid.innerHTML += `
+          <div class="card" onclick="openContinent('${cont.id}')">
+            <div class="card-image-wrapper">
+              <img src="${cont.img}" class="card-image" alt="${cont.name}">
+              <button class="btn-play" onclick="event.stopPropagation(); setNowPlaying('${cont.name}', '대륙 탐험', '${cont.img}')">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <div class="card-title">${cont.name}</div>
+            <div class="card-subtitle">${cont.desc}</div>
+          </div>
+        `;
+      });
+
+      // Scroll effect
+      document.getElementById('mainView').addEventListener('scroll', function() {
+        const topBar = document.getElementById('topBar');
+        if (this.scrollTop > 50) topBar.classList.add('scrolled');
+        else topBar.classList.remove('scrolled');
+      });
+      
+      updateSidebar();
+      updateNavButtons();
+    }
+
+    // --- NAVIGATION ---
+    function goHome() {
+      navHistory.splice(1); // clear history
+      currentContinent = null;
+      currentCountry = null;
+      updateViews();
+    }
+
+    function goBack() {
+      if(navHistory.length > 1) {
+        navHistory.pop();
+        const state = navHistory[navHistory.length - 1];
+        if(state === 'home') goHome();
+        else if(state.startsWith('continent:')) openContinent(state.split(':')[1], false);
+      }
+    }
+
+    function openContinent(contId, pushState = true) {
+      if(pushState) navHistory.push(`continent:${contId}`);
+      currentContinent = continents.find(c => c.id === contId);
+      currentCountry = null;
+      
+      const clist = countries[contId] || [];
+      const grid = document.getElementById('countriesGrid');
+      grid.innerHTML = '';
+      
+      clist.forEach(c => {
+        grid.innerHTML += `
+          <div class="card" onclick="openCountry('${contId}', '${c.id}')">
+            <div class="card-image-wrapper" style="border-radius: 50%;">
+              <img src="${c.img}" class="card-image" alt="${c.name}">
+              <button class="btn-play" onclick="event.stopPropagation(); setNowPlaying('${c.name}', '국가 정보', '${c.img}')">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </button>
+            </div>
+            <div class="card-title">${c.name}</div>
+            <div class="card-subtitle">${c.desc}</div>
+          </div>
+        `;
+      });
+
+      updateViews();
+    }
+
+    function openCountry(contId, countryId, pushState = true) {
+      if(pushState) navHistory.push(`country:${countryId}`);
+      const clist = countries[contId];
+      currentCountry = clist.find(c => c.id === countryId);
+      
+      const tbody = document.getElementById('cityTableBody');
+      tbody.innerHTML = '';
+      
+      const cityList = cities[countryId] || [];
+      if(cityList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 40px; color: var(--text-subdued)">도시 정보 업데이트 중...</td></tr>`;
+      } else {
+        cityList.forEach((city, index) => {
+          const isAdded = myTravelList.includes(city.name);
+          const btnText = isAdded ? '추가됨' : '담기';
+          const btnColor = isAdded ? 'var(--brand-primary)' : 'transparent';
+          const btnBorder = isAdded ? 'var(--brand-primary)' : 'var(--text-subdued)';
+          
+          tbody.innerHTML += `
+            <tr class="track-row" onclick="toggleCityDetail('${city.id}')">
+              <td style="text-align: center;">${index + 1}</td>
+              <td>
+                <div class="track-title-col">
+                  <img src="${city.img}" class="track-img">
+                  <div>
+                    <div class="track-name">${city.name}</div>
+                    <div class="track-desc">${city.desc}</div>
+                  </div>
+                </div>
+              </td>
+              <td style="text-align: right;">
+                <button class="btn-add" style="background: ${btnColor}; border-color: ${btnBorder}; color: ${isAdded ? '#000' : 'var(--text-base)'}" onclick="event.stopPropagation(); addToTravel(this, '${city.name}')">${btnText}</button>
+              </td>
+            </tr>
+            <tr class="itinerary-row" id="detail-${city.id}">
+              <td colspan="3" style="padding: 0;">
+                <div class="itinerary-content">
+                  <div class="it-title" style="margin-bottom: 8px;">✈️ 추천 여행 일정</div>
+                  <div class="it-days">
+                    ${city.itinerary ? `
+                      ${city.itinerary.map(it => `
+                        <div class="it-day">
+                          <div class="it-day-label">${it.day}</div>
+                          <div class="it-day-desc">${it.desc}</div>
+                        </div>
+                      `).join('')}
+                    ` : ''}
+                    
+                    ${city.itinerary2n3d ? `
+                      <div class="it-title" style="margin-top: 16px; margin-bottom: 12px; font-size:15px; color:var(--text-base);">▶ 2박 3일 단기 여행</div>
+                      ${city.itinerary2n3d.map(it => `
+                        <div class="it-day">
+                          <div class="it-day-label">${it.day}</div>
+                          <div class="it-day-desc">${it.desc}</div>
+                        </div>
+                      `).join('')}
+                    ` : ''}
+                    
+                    ${city.itinerary1w ? `
+                      <div class="it-title" style="margin-top: 24px; margin-bottom: 12px; font-size:15px; color:var(--text-base);">▶ 여유로운 일주일 살기</div>
+                      ${city.itinerary1w.map(it => `
+                        <div class="it-day">
+                          <div class="it-day-label">${it.day}</div>
+                          <div class="it-day-desc">${it.desc}</div>
+                        </div>
+                      `).join('')}
+                    ` : ''}
+                  </div>
+                  <div class="it-hotel">
+                    <div class="it-hotel-title">
+                      <svg viewBox="0 0 24 24" style="width:16px;height:16px;fill:var(--text-base);"><path d="M7 13c1.66 0 3-1.34 3-3S8.66 7 7 7s-3 1.34-3 3 1.34 3 3 3zm12-6h-8v7H3V5H1v15h2v-3h18v3h2v-9c0-2.21-1.79-4-4-4z"/></svg>
+                      추천 패밀리 숙소: ${city.hotel.name}
+                    </div>
+                    <div class="it-hotel-desc">${city.hotel.desc}</div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          `;
+        });
+      }
+      updateViews();
+    }
+
+    function toggleCityDetail(cityId) {
+      const el = document.getElementById(`detail-${cityId}`);
+      if(el) el.classList.toggle('open');
+    }
+
+    function updateViews() {
+      const v1 = document.getElementById('viewLevel1');
+      const v2 = document.getElementById('viewLevel2');
+      const v3 = document.getElementById('viewLevel3');
+      const gradient = document.getElementById('topGradient');
+      
+      v1.style.display = 'none';
+      v2.style.display = 'none';
+      v3.style.display = 'none';
+
+      const state = navHistory[navHistory.length - 1];
+      
+      if(state === 'home') {
+        v1.style.display = 'block';
+        gradient.style.background = `linear-gradient(to bottom, rgba(83, 157, 245, 0.4) 0%, var(--bg-base) 100%)`;
+      } 
+      else if(state.startsWith('continent:')) {
+        v2.style.display = 'block';
+        document.getElementById('l2HeroImg').src = currentContinent.img;
+        document.getElementById('l2HeroTitle').innerText = currentContinent.name;
+        document.getElementById('l2HeroDesc').innerText = currentContinent.desc;
+        gradient.style.background = `linear-gradient(to bottom, ${currentContinent.color} 0%, var(--bg-base) 100%)`;
+      }
+      else if(state.startsWith('country:')) {
+        v3.style.display = 'block';
+        document.getElementById('l3HeroImg').src = currentCountry.img;
+        document.getElementById('l3HeroTitle').innerText = currentCountry.name;
+        document.getElementById('l3HeroDesc').innerText = currentCountry.desc;
+        // reuse continent color for country gradient
+        gradient.style.background = `linear-gradient(to bottom, ${currentContinent.color} 0%, var(--bg-base) 100%)`;
+      }
+
+      updateNavButtons();
+    }
+
+    function updateNavButtons() {
+      const btnBack = document.getElementById('btnBack');
+      btnBack.disabled = navHistory.length <= 1;
+    }
+
+    // --- ACTIONS ---
+    function setNowPlaying(title, desc, img) {
+      document.getElementById('npImg').src = img;
+      document.getElementById('npTitle').innerText = title;
+      document.getElementById('npDesc').innerText = desc;
+    }
+
+    function addToTravel(btn, cityName) {
+      if(!myTravelList.includes(cityName)) {
+        myTravelList.push(cityName);
+        btn.innerText = '추가됨';
+        btn.style.background = 'var(--brand-primary)';
+        btn.style.borderColor = 'var(--brand-primary)';
+        btn.style.color = '#000';
+        updateSidebar();
+      }
+    }
+
+    function updateSidebar() {
+      const list = document.getElementById('myTripsList');
+      if(myTravelList.length === 0) {
+        list.innerHTML = '<div class="playlist-item" style="font-style: italic;">추가된 도시가 없습니다</div>';
+      } else {
+        list.innerHTML = '';
+        myTravelList.forEach((c, i) => {
+          list.innerHTML += `<div class="playlist-item">🧳 My Trip: ${c}</div>`;
+        });
+      }
+    }
+
+    window.onload = init;
+  </script>
+</body>
+</html>

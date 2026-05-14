@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Claude - Presentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Colors */
+      --primary: #cc785c;
+      --primary-active: #a9583e;
+      --ink: #141413;
+      --body: #3d3d3a;
+      --body-strong: #252523;
+      --muted: #6c6a64;
+      --muted-soft: #8e8b82;
+      --hairline: #e6dfd8;
+      --canvas: #faf9f5;
+      --surface-card: #efe9de;
+      --surface-dark: #181715;
+      --surface-dark-soft: #1f1e1b;
+      --on-primary: #ffffff;
+      --on-dark: #faf9f5;
+      --on-dark-soft: #a09d96;
+      --accent-teal: #5db8a6;
+      
+      /* Typography */
+      --font-display: "Cormorant Garamond", "Times New Roman", serif;
+      --font-body: "Inter", -apple-system, sans-serif;
+      --font-code: "JetBrains Mono", monospace;
+
+      /* Rounded */
+      --rounded-md: 8px;
+      --rounded-lg: 12px;
+      --rounded-xl: 16px;
+      --rounded-pill: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-body);
+      color: var(--ink);
+      background-color: var(--canvas);
+      overflow: hidden; /* Hide scrollbars for presentation mode */
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Presentation Layout */
+    .slider-container {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .slides-wrapper {
+      display: flex;
+      width: 1000vw; /* 10 slides */
+      height: 100%;
+      transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .slide {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 96px;
+      position: relative;
+    }
+
+    /* Slide Themes */
+    .slide--cream {
+      background-color: var(--canvas);
+      color: var(--ink);
+    }
+    .slide--dark {
+      background-color: var(--surface-dark);
+      color: var(--on-dark);
+    }
+    .slide--coral {
+      background-color: var(--primary);
+      color: var(--on-primary);
+    }
+
+    /* Typography Classes */
+    .display-xl {
+      font-family: var(--font-display);
+      font-size: 80px; /* Slightly larger for PPT */
+      font-weight: 500;
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+    .display-lg {
+      font-family: var(--font-display);
+      font-size: 56px;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.015em;
+      margin-bottom: 24px;
+    }
+    .display-md {
+      font-family: var(--font-display);
+      font-size: 40px;
+      font-weight: 500;
+      line-height: 1.15;
+      letter-spacing: -0.01em;
+      margin-bottom: 16px;
+    }
+    .title-lg {
+      font-family: var(--font-body);
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.3;
+      margin-bottom: 16px;
+    }
+    .body-lg {
+      font-family: var(--font-body);
+      font-size: 20px;
+      font-weight: 400;
+      line-height: 1.55;
+      max-width: 700px;
+      color: var(--body);
+    }
+    .slide--dark .body-lg {
+      color: var(--on-dark-soft);
+    }
+    .slide--coral .body-lg {
+      color: rgba(255,255,255,0.9);
+    }
+
+    /* Spike Mark Logo (Anthropic Asterisk) */
+    .spike-mark {
+      width: 48px;
+      height: 48px;
+      margin-bottom: 40px;
+    }
+    .spike-mark line {
+      stroke: currentColor;
+      stroke-width: 4;
+      stroke-linecap: round;
+    }
+
+    /* Components */
+    .button-primary {
+      display: inline-flex;
+      background-color: var(--primary);
+      color: var(--on-primary);
+      font-family: var(--font-body);
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: var(--rounded-md);
+      padding: 16px 28px;
+      text-decoration: none;
+      margin-top: 32px;
+      border: none;
+      cursor: pointer;
+    }
+    .slide--coral .button-primary {
+      background-color: var(--canvas);
+      color: var(--ink);
+    }
+
+    /* Grids & Cards */
+    .grid-3up {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      width: 100%;
+      max-width: 1200px;
+      margin-top: 48px;
+    }
+    .feature-card {
+      background-color: var(--surface-card);
+      border-radius: var(--rounded-lg);
+      padding: 32px;
+    }
+    .feature-card h3 {
+      font-family: var(--font-body);
+      font-size: 20px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    
+    .pricing-card {
+      background-color: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--rounded-lg);
+      padding: 32px;
+    }
+    .pricing-card.featured {
+      background-color: var(--surface-dark);
+      color: var(--on-dark);
+      border: none;
+    }
+    .pricing-card.featured .muted { color: var(--on-dark-soft); }
+    .pricing-card.featured h3 { color: var(--on-dark); }
+
+    /* Code Window */
+    .code-window-card {
+      background-color: var(--surface-dark-soft);
+      border-radius: var(--rounded-lg);
+      padding: 32px;
+      width: 100%;
+      max-width: 900px;
+      margin-top: 40px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    }
+    .code-text {
+      font-family: var(--font-code);
+      font-size: 16px;
+      line-height: 1.6;
+      color: var(--on-dark);
+      white-space: pre;
+    }
+    .code-keyword { color: var(--primary); }
+    .code-string { color: var(--accent-teal); }
+    .code-comment { color: var(--muted-soft); }
+
+    /* Navigation Controls */
+    .controls {
+      position: fixed;
+      bottom: 40px;
+      right: 40px;
+      display: flex;
+      gap: 16px;
+      z-index: 1000;
+    }
+    .control-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--rounded-full);
+      background-color: var(--canvas);
+      border: 1px solid var(--hairline);
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .control-btn:hover { background-color: var(--surface-card); }
+    .control-btn svg { width: 24px; height: 24px; stroke: currentColor; stroke-width: 2; fill: none; }
+
+    /* Slide Number */
+    .slide-number {
+      position: fixed;
+      bottom: 50px;
+      left: 48px;
+      font-family: var(--font-code);
+      font-size: 14px;
+      color: var(--muted);
+      z-index: 1000;
+    }
+
+    /* Layout Utilities */
+    .split-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1200px;
+      gap: 64px;
+      margin: 0 auto;
+    }
+    .split-text { flex: 1; }
+    .split-visual { flex: 1; }
+    
+    .center-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin: 0 auto;
+      max-width: 900px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="slide-number" id="slideNum">01 / 10</div>
+
+  <div class="controls">
+    <button class="control-btn" id="prevBtn" title="Previous Slide">
+      <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <button class="control-btn" id="nextBtn" title="Next Slide">
+      <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+
+  <div class="slider-container">
+    <div class="slides-wrapper" id="slidesWrapper">
+
+      <!-- Slide 1: Intro (Cream) -->
+      <div class="slide slide--cream">
+        <div class="split-layout">
+          <div class="split-text">
+            <svg class="spike-mark" viewBox="0 0 48 48">
+              <line x1="24" y1="4" x2="24" y2="44"/>
+              <line x1="4" y1="24" x2="44" y2="24"/>
+              <line x1="10" y1="10" x2="38" y2="38"/>
+              <line x1="10" y1="38" x2="38" y2="10"/>
+            </svg>
+            <h1 class="display-xl">Meet your<br>thinking partner.</h1>
+            <p class="body-lg">Claude is a next-generation AI assistant built for work and designed to be safe, accurate, and secure.</p>
+            <a href="#" class="button-primary">Talk to Claude</a>
+          </div>
+          <div class="split-visual" style="background: var(--surface-card); border-radius: var(--rounded-xl); height: 500px;">
+            <!-- Abstract Illustration Placeholder -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 2: The Product (Dark) -->
+      <div class="slide slide--dark">
+        <div class="center-content">
+          <h2 class="display-lg">Intelligence that scales with you.</h2>
+          <p class="body-lg">From simple conversations to complex code generation and agentic workflows, Claude adapts to your needs seamlessly.</p>
+          
+          <div class="code-window-card" style="text-align: left; margin-top: 64px;">
+            <div class="code-text">
+<span class="code-keyword">import</span> anthropic
+
+client = anthropic.Anthropic()
+message = client.messages.create(
+    model=<span class="code-string">"claude-3-opus-20240229"</span>,
+    max_tokens=<span class="code-keyword">1000</span>,
+    messages=[
+        {<span class="code-string">"role"</span>: <span class="code-string">"user"</span>, <span class="code-string">"content"</span>: <span class="code-string">"Analyze this dataset."</span>}
+    ]
+)
+<span class="code-comment"># Claude instantly processes and returns complex analysis</span>
+print(message.content)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 3: Features (Cream) -->
+      <div class="slide slide--cream">
+        <div class="center-content">
+          <h2 class="display-lg">Built for complex reasoning.</h2>
+          <p class="body-lg">Claude excels at tasks requiring deep logical thinking, nuanced understanding, and extensive context windows.</p>
+          
+          <div class="grid-3up">
+            <div class="feature-card" style="text-align: left;">
+              <h3 style="color: var(--ink);">Advanced Vision</h3>
+              <p class="body-lg" style="font-size: 16px;">Process and analyze complex visual information, from technical diagrams to handwritten notes.</p>
+            </div>
+            <div class="feature-card" style="text-align: left;">
+              <h3 style="color: var(--ink);">200K Context</h3>
+              <p class="body-lg" style="font-size: 16px;">Process entire codebases, financial reports, or books in a single prompt without losing detail.</p>
+            </div>
+            <div class="feature-card" style="text-align: left;">
+              <h3 style="color: var(--ink);">Tool Use</h3>
+              <p class="body-lg" style="font-size: 16px;">Equip Claude with client-side tools and APIs to interact directly with your internal systems.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 4: Safety & Trust (Cream Card Focus) -->
+      <div class="slide slide--cream">
+        <div class="split-layout">
+          <div class="split-visual" style="padding-right: 48px;">
+            <div style="background: var(--surface-card); padding: 48px; border-radius: var(--rounded-lg);">
+              <h3 class="display-md">Constitutional AI</h3>
+              <p class="body-lg" style="font-size: 18px; margin-top: 16px;">Our unique training approach ensures Claude remains helpful, honest, and harmless without human feedback bottlenecks.</p>
+            </div>
+          </div>
+          <div class="split-text">
+            <h2 class="display-lg">Enterprise-grade security by design.</h2>
+            <p class="body-lg">We don't train our models on your business data. Your IP remains yours, protected by industry-standard compliance including SOC 2 Type II and HIPAA.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 5: The Model Family (Cream) -->
+      <div class="slide slide--cream">
+        <div class="center-content">
+          <h2 class="display-lg">The Claude 3 Family.</h2>
+          <p class="body-lg">A model for every benchmark. Choose the right balance of intelligence, speed, and cost.</p>
+          
+          <div class="grid-3up">
+            <div class="pricing-card" style="text-align: left;">
+              <h3 class="display-md">Haiku</h3>
+              <p class="title-lg" style="color: var(--muted); font-size: 16px;">Light & Fast</p>
+              <p class="body-lg" style="font-size: 16px; margin-top: 16px;">Instantaneous responses for seamless, fast-paced enterprise workflows.</p>
+            </div>
+            <div class="pricing-card" style="text-align: left;">
+              <h3 class="display-md">Sonnet</h3>
+              <p class="title-lg" style="color: var(--muted); font-size: 16px;">Hard-working</p>
+              <p class="body-lg" style="font-size: 16px; margin-top: 16px;">The ideal balance of intelligence and speed for scaling everyday tasks.</p>
+            </div>
+            <div class="pricing-card" style="text-align: left;">
+              <h3 class="display-md">Opus</h3>
+              <p class="title-lg" style="color: var(--muted); font-size: 16px;">Powerful</p>
+              <p class="body-lg" style="font-size: 16px; margin-top: 16px;">Our most capable model for highly complex analysis and reasoning.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 6: Pricing (Cream / Dark mix) -->
+      <div class="slide slide--cream">
+        <div class="center-content">
+          <h2 class="display-lg">Plans that grow with you.</h2>
+          
+          <div class="grid-3up" style="gap: 24px;">
+            <div class="pricing-card" style="text-align: left;">
+              <p class="title-lg">Free</p>
+              <h3 class="display-md">$0</h3>
+              <p class="body-lg" style="font-size: 16px; margin-top: 24px;">Essential access to Claude for individuals to try out.</p>
+            </div>
+            <div class="pricing-card featured" style="text-align: left;">
+              <p class="title-lg" style="color: var(--primary);">Pro</p>
+              <h3 class="display-md">$20<span style="font-size: 20px; font-family: var(--font-body); font-weight:400; color:var(--on-dark-soft)">/mo</span></h3>
+              <p class="body-lg" style="font-size: 16px; margin-top: 24px;">Maximum power for heavy individual usage.</p>
+              <a href="#" class="button-primary" style="width: 100%; text-align: center; justify-content: center;">Subscribe</a>
+            </div>
+            <div class="pricing-card" style="text-align: left;">
+              <p class="title-lg">Team</p>
+              <h3 class="display-md">$30<span style="font-size: 20px; font-family: var(--font-body); font-weight:400; color:var(--muted)">/user</span></h3>
+              <p class="body-lg" style="font-size: 16px; margin-top: 24px;">Collaborative workspace and admin controls for teams.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 7: API & Connectors (Cream) -->
+      <div class="slide slide--cream">
+        <div class="split-layout">
+          <div class="split-text">
+            <h2 class="display-lg">Build with Claude.</h2>
+            <p class="body-lg">Integrate our models directly into your applications via the Anthropic API, or access Claude through major cloud providers like AWS Bedrock and Google Cloud Vertex AI.</p>
+          </div>
+          <div class="split-visual" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+            <div class="feature-card" style="text-align: center; padding: 24px;">
+              <h4 class="title-lg" style="margin:0;">AWS Bedrock</h4>
+            </div>
+            <div class="feature-card" style="text-align: center; padding: 24px;">
+              <h4 class="title-lg" style="margin:0;">Google Cloud</h4>
+            </div>
+            <div class="feature-card" style="text-align: center; padding: 24px; grid-column: span 2;">
+              <h4 class="title-lg" style="margin:0;">Anthropic Console</h4>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 8: Use Cases (Dark) -->
+      <div class="slide slide--dark">
+        <div class="center-content">
+          <h2 class="display-lg">Transforming workflows.</h2>
+          <p class="body-lg">How industry leaders are deploying Claude today.</p>
+          
+          <div class="grid-3up" style="margin-top: 64px;">
+            <div style="border-top: 1px solid var(--muted); padding-top: 24px; text-align: left;">
+              <h3 class="title-lg" style="color: var(--on-dark);">Legal & Finance</h3>
+              <p class="body-lg" style="font-size: 16px;">Reviewing 100-page contracts and parsing financial data instantly with near-perfect recall.</p>
+            </div>
+            <div style="border-top: 1px solid var(--muted); padding-top: 24px; text-align: left;">
+              <h3 class="title-lg" style="color: var(--on-dark);">Software Engineering</h3>
+              <p class="body-lg" style="font-size: 16px;">Refactoring legacy code, writing tests, and explaining complex architectures.</p>
+            </div>
+            <div style="border-top: 1px solid var(--muted); padding-top: 24px; text-align: left;">
+              <h3 class="title-lg" style="color: var(--on-dark);">Customer Support</h3>
+              <p class="body-lg" style="font-size: 16px;">Deploying highly empathetic, context-aware agents that resolve issues without escalation.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Slide 9: Call to Action (Coral) -->
+      <div class="slide slide--coral">
+        <div class="center-content">
+          <h2 class="display-xl" style="color: var(--on-primary);">Start building today.</h2>
+          <p class="body-lg" style="max-width: 600px; margin-bottom: 32px;">Experience the most capable, steerable, and secure AI assistant available.</p>
+          <a href="#" class="button-primary">Create an Account</a>
+        </div>
+      </div>
+
+      <!-- Slide 10: Ending / Q&A (Dark Navy) -->
+      <div class="slide slide--dark" style="justify-content: space-between;">
+        <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center;">
+          <svg class="spike-mark" viewBox="0 0 48 48" style="color: var(--primary);">
+            <line x1="24" y1="4" x2="24" y2="44"/>
+            <line x1="4" y1="24" x2="44" y2="24"/>
+            <line x1="10" y1="10" x2="38" y2="38"/>
+            <line x1="10" y1="38" x2="38" y2="10"/>
+          </svg>
+          <h2 class="display-lg" style="margin-bottom: 0;">Thank You.</h2>
+          <p class="body-lg" style="margin-top: 16px;">anthropic.com</p>
+        </div>
+        
+        <div style="width: 100%; border-top: 1px solid var(--muted-soft); padding-top: 24px; display: flex; justify-content: space-between;">
+          <span style="color: var(--on-dark-soft); font-family: var(--font-body); font-size: 14px;">© 2026 Anthropic PBC</span>
+          <span style="color: var(--on-dark-soft); font-family: var(--font-body); font-size: 14px;">Q&A Session</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const wrapper = document.getElementById('slidesWrapper');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const slideNum = document.getElementById('slideNum');
+    
+    let currentSlide = 0;
+    const totalSlides = 10;
+
+    function updateSlide() {
+      // Prevent out of bounds
+      if (currentSlide < 0) currentSlide = 0;
+      if (currentSlide >= totalSlides) currentSlide = totalSlides - 1;
+      
+      // Translate wrapper
+      wrapper.style.transform = `translateX(-${currentSlide * 10}%)`;
+      
+      // Update numbering
+      slideNum.textContent = `${String(currentSlide + 1).padStart(2, '0')} / ${totalSlides}`;
+      
+      // Update button states
+      prevBtn.style.opacity = currentSlide === 0 ? '0.5' : '1';
+      prevBtn.style.cursor = currentSlide === 0 ? 'default' : 'pointer';
+      
+      nextBtn.style.opacity = currentSlide === totalSlides - 1 ? '0.5' : '1';
+      nextBtn.style.cursor = currentSlide === totalSlides - 1 ? 'default' : 'pointer';
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    });
+
+    prevBtn.addEventListener('click', () => {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    });
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'Space' || e.key === 'PageDown') {
+        if (currentSlide < totalSlides - 1) {
+          currentSlide++;
+          updateSlide();
+        }
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        if (currentSlide > 0) {
+          currentSlide--;
+          updateSlide();
+        }
+      }
+    });
+
+    // Initialize
+    updateSlide();
+  </script>
+</body>
+</html>

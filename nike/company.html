@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AERO - Company Introduction</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Colors */
+      --primary: #111111;
+      --on-primary: #ffffff;
+      --canvas: #ffffff;
+      --soft-cloud: #f5f5f5;
+      --ink: #111111;
+      --charcoal: #39393b;
+      --mute: #707072;
+      --hairline: #cacacb;
+      --hairline-soft: #e5e5e5;
+      --sale: #d30005;
+      
+      /* Typography */
+      --font-display: "Anton", "Bebas Neue", "Impact", sans-serif;
+      --font-ui: "Inter", "Helvetica Neue", Helvetica, Arial, sans-serif;
+
+      /* Spacing */
+      --spacing-xs: 4px;
+      --spacing-sm: 8px;
+      --spacing-md: 12px;
+      --spacing-lg: 18px;
+      --spacing-xl: 24px;
+      --spacing-section: 48px;
+
+      /* Rounded */
+      --rounded-none: 0px;
+      --rounded-md: 24px;
+      --rounded-lg: 30px;
+      --rounded-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-ui);
+      color: var(--ink);
+      background-color: var(--canvas);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* Container System */
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    @media (min-width: 1920px) {
+      .container { padding: 0 80px; }
+    }
+
+    /* Utility Bar */
+    .utility-bar {
+      background-color: var(--soft-cloud);
+      height: 36px;
+      display: none; /* Hide on mobile by default */
+    }
+    @media (min-width: 1024px) {
+      .utility-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+      }
+    }
+    .utility-links {
+      display: flex;
+      gap: 16px;
+      padding-right: 24px;
+    }
+    .utility-links a {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .utility-links a:hover {
+      color: var(--mute);
+    }
+
+    /* Primary Nav */
+    .primary-nav {
+      height: 56px;
+      background-color: var(--canvas);
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+    }
+    .nav-content {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      text-decoration: none;
+      color: var(--ink);
+    }
+    .nav-links {
+      display: none;
+    }
+    @media (min-width: 1024px) {
+      .nav-links {
+        display: flex;
+        gap: 24px;
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+      .nav-links a {
+        font-size: 16px;
+        font-weight: 500;
+        color: var(--ink);
+        text-decoration: none;
+        padding-bottom: 2px;
+        border-bottom: 2px solid transparent;
+      }
+      .nav-links a:hover, .nav-links a.active {
+        border-bottom-color: var(--ink);
+      }
+    }
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .search-pill {
+      background-color: var(--soft-cloud);
+      border-radius: var(--rounded-md);
+      padding: 8px 16px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .search-pill span {
+      font-size: 16px;
+      font-weight: 400;
+      color: var(--mute);
+    }
+    @media (max-width: 768px) {
+      .search-pill span { display: none; }
+      .search-pill { padding: 8px; border-radius: var(--rounded-full); width: 40px; justify-content: center; }
+    }
+
+    /* Campaign Hero */
+    .campaign-tile {
+      position: relative;
+      width: 100%;
+      height: 80vh;
+      min-height: 600px;
+      background-color: var(--ink);
+      overflow: hidden;
+    }
+    .campaign-image {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      object-fit: cover;
+      opacity: 0.8; /* Slight darkening for text contrast */
+    }
+    .campaign-content {
+      position: relative;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding-bottom: 48px;
+      z-index: 10;
+    }
+    .display-campaign {
+      font-family: var(--font-display);
+      font-size: clamp(64px, 12vw, 120px);
+      font-weight: 400;
+      line-height: 0.9;
+      color: var(--on-primary);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+    }
+    .button-outline-on-image {
+      background-color: var(--canvas);
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: var(--rounded-lg);
+      padding: 12px 24px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      align-self: flex-start;
+      transition: transform 0.1s ease;
+    }
+    .button-outline-on-image:active {
+      transform: scale(0.95);
+    }
+
+    /* Sections */
+    .section-padding {
+      padding: var(--spacing-section) 0;
+    }
+    .heading-xl {
+      font-size: 32px;
+      font-weight: 500;
+      line-height: 1.2;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+    }
+    .body-md {
+      font-size: 16px;
+      font-weight: 400;
+      line-height: 1.5;
+    }
+    .charcoal { color: var(--charcoal); }
+    .mute { color: var(--mute); }
+
+    /* Statement Block */
+    .statement-block {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    /* Product Grid */
+    .grid-3up {
+      display: grid;
+      grid-template-columns: repeat(1, 1fr);
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .grid-3up { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    }
+    .product-card {
+      display: flex;
+      flex-direction: column;
+    }
+    .product-card-image {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      background-color: var(--soft-cloud);
+      object-fit: cover;
+    }
+    .card-meta {
+      padding-top: var(--spacing-sm);
+    }
+    .body-strong {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--ink);
+    }
+    .caption-md {
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 1.5;
+      color: var(--mute);
+    }
+
+    /* Member Benefit Card (Careers) */
+    .member-benefit-card {
+      background-color: var(--ink);
+      color: var(--on-primary);
+      position: relative;
+      overflow: hidden;
+      margin-top: var(--spacing-section);
+    }
+    .benefit-image {
+      width: 100%;
+      height: 500px;
+      object-fit: cover;
+      opacity: 0.6;
+    }
+    .benefit-content {
+      position: absolute;
+      bottom: 0; left: 0; width: 100%;
+      padding: 48px 24px;
+    }
+    .heading-lg {
+      font-size: 24px;
+      font-weight: 500;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    /* Buttons inside sections */
+    .button-primary {
+      background-color: var(--ink);
+      color: var(--on-primary);
+      font-size: 16px;
+      font-weight: 500;
+      border-radius: var(--rounded-lg);
+      padding: 16px 32px;
+      height: 48px;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      transition: transform 0.1s ease;
+    }
+    .button-primary:active { transform: scale(0.95); opacity: 0.8; }
+
+    /* Footer */
+    .footer {
+      border-top: 1px solid var(--hairline);
+      margin-top: var(--spacing-section);
+      padding: var(--spacing-section) 0 24px;
+    }
+    .footer-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    @media (min-width: 768px) {
+      .footer-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .footer-col h4 {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+    .footer-col ul {
+      list-style: none;
+    }
+    .footer-col li {
+      margin-bottom: 12px;
+    }
+    .footer-col a {
+      font-size: 14px;
+      color: var(--mute);
+      text-decoration: none;
+    }
+    .footer-col a:hover {
+      color: var(--ink);
+    }
+    .footer-bottom {
+      margin-top: 48px;
+      padding-top: 24px;
+      border-top: 1px solid var(--hairline);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    @media (min-width: 768px) {
+      .footer-bottom { flex-direction: row; justify-content: space-between; }
+    }
+    .utility-xs {
+      font-size: 10px; /* Closest safe size to 9px */
+      font-weight: 500;
+      color: var(--mute);
+    }
+    .footer-bottom-links {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .footer-bottom-links a {
+      font-size: 10px;
+      color: var(--mute);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Utility Bar -->
+  <div class="utility-bar">
+    <div class="container utility-links">
+      <a href="#">Find a Store</a>
+      <a href="#">Help</a>
+      <a href="#">Join Us</a>
+      <a href="#">Sign In</a>
+    </div>
+  </div>
+
+  <!-- Primary Nav -->
+  <nav class="primary-nav">
+    <div class="container nav-content">
+      <a href="#" class="logo">AERO</a>
+      <div class="nav-links">
+        <a href="#" class="active">About</a>
+        <a href="#">Innovation</a>
+        <a href="#">Athletes</a>
+        <a href="#">Stories</a>
+      </div>
+      <div class="nav-actions">
+        <div class="search-pill">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <span>Search</span>
+        </div>
+        <!-- Hamburger (mobile only) / Icon (desktop) -->
+        <svg style="cursor:pointer;" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Campaign -->
+  <section class="campaign-tile">
+    <img class="campaign-image" src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=1920&q=80" alt="Athlete running on trail">
+    <div class="container campaign-content">
+      <h1 class="display-campaign">Push Past<br>Impossible.</h1>
+      <a href="#mission" class="button-outline-on-image">Our Mission</a>
+    </div>
+  </section>
+
+  <!-- Statement Section -->
+  <section id="mission" class="container section-padding statement-block">
+    <h2 class="heading-xl">Engineering the Future of Sport.</h2>
+    <p class="body-md charcoal" style="margin-bottom: 32px;">
+      Aero is an athletic technology company committed to unlocking human potential. We build gear, software, and experiences that help athletes go further, faster. No fluff. Just performance.
+    </p>
+    <a href="#" class="button-primary">Learn More</a>
+  </section>
+
+  <!-- Product/Value Grid (3-up) -->
+  <section class="container section-padding">
+    <h2 class="heading-xl">Latest Innovations</h2>
+    <div class="grid-3up">
+      <!-- Card 1 -->
+      <div class="product-card">
+        <img class="product-card-image" src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=800&q=80" alt="Red Sneaker">
+        <div class="card-meta">
+          <h3 class="body-strong">Aero Velocity Pro</h3>
+          <p class="caption-md mute">Men's Road Racing Shoes</p>
+          <p class="body-strong" style="margin-top: 8px;">$250</p>
+        </div>
+      </div>
+      <!-- Card 2 -->
+      <div class="product-card">
+        <img class="product-card-image" src="https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=800&q=80" alt="Green Sneaker">
+        <div class="card-meta">
+          <h3 class="body-strong">Aero Trail XT</h3>
+          <p class="caption-md mute">Unisex Trail Running Shoes</p>
+          <p class="body-strong" style="margin-top: 8px;">
+            <span style="color: var(--sale); margin-right: 8px;">$140</span>
+            <span style="text-decoration: line-through; color: var(--mute); font-weight: 400;">$180</span>
+          </p>
+        </div>
+      </div>
+      <!-- Card 3 -->
+      <div class="product-card">
+        <img class="product-card-image" src="https://images.unsplash.com/photo-1556906781-9a412961c28c?auto=format&fit=crop&w=800&q=80" alt="White Sneaker">
+        <div class="card-meta">
+          <h3 class="body-strong">Aero Daily Fit</h3>
+          <p class="caption-md mute">Women's Training Shoes</p>
+          <p class="body-strong" style="margin-top: 8px;">$120</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Member Benefit / Careers -->
+  <section class="member-benefit-card">
+    <img class="benefit-image" src="https://images.unsplash.com/photo-1574680096145-d05b474e2155?auto=format&fit=crop&w=1920&q=80" alt="Gym Workout">
+    <div class="container benefit-content">
+      <h2 class="heading-lg">Join the Movement</h2>
+      <p class="body-md" style="margin-bottom: 24px; max-width: 400px; opacity: 0.9;">
+        Be part of a team that doesn't just play the game, but changes it entirely. Explore career opportunities globally.
+      </p>
+      <a href="#" class="button-outline-on-image">Explore Careers</a>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>Resources</h4>
+          <ul>
+            <li><a href="#">Gift Cards</a></li>
+            <li><a href="#">Find a Store</a></li>
+            <li><a href="#">Become a Member</a></li>
+            <li><a href="#">Site Feedback</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Help</h4>
+          <ul>
+            <li><a href="#">Get Help</a></li>
+            <li><a href="#">Order Status</a></li>
+            <li><a href="#">Shipping and Delivery</a></li>
+            <li><a href="#">Returns</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#">About Aero</a></li>
+            <li><a href="#">News</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Investors</a></li>
+            <li><a href="#">Sustainability</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Promotions</h4>
+          <ul>
+            <li><a href="#">Student Discount</a></li>
+            <li><a href="#">Military Discount</a></li>
+            <li><a href="#">First Responder Discount</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="utility-xs">
+          &copy; 2026 Aero, Inc. All Rights Reserved
+        </div>
+        <div class="footer-bottom-links">
+          <a href="#">Guides</a>
+          <a href="#">Terms of Sale</a>
+          <a href="#">Terms of Use</a>
+          <a href="#">Aero Privacy Policy</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
